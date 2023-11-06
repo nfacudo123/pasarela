@@ -1,0 +1,117 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Pasarela de pagos</title>
+    <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css">
+    <style>
+        .crypto-option {
+            display: flex;
+            align-items: center;
+        }
+
+        .crypto-logo {
+            width: 30px;
+            height: 30px;
+            margin-right: 10px;
+        }
+
+        .center-content {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            min-height: 100vh;
+        }
+
+        #walletInfo {
+            text-align: center;
+        }
+    </style>
+    
+</head>
+<body class="container center-content">
+    <h1 id="cryptoSelection">Selecciona la criptomoneda de pago</h1>
+    <form id="walletForm" class="mt-4">
+        <div class="form-check crypto-option">
+            <input class="form-check-input" type="radio" name="network" value="BNB" required>
+            <img class="crypto-logo" src="https://s2.coinmarketcap.com/static/img/coins/64x64/1839.png" alt="BNB Logo"> Binance Smart Chain (BNB)
+        </div>
+
+        <div class="form-check crypto-option">
+            <input class="form-check-input" type="radio" name="network" value="BTC">
+            <img class="crypto-logo" src="https://s2.coinmarketcap.com/static/img/coins/64x64/1.png" alt "BTC Logo"> Bitcoin (BTC)
+        </div>
+
+        <div class="form-check crypto-option">
+            <input class="form-check-input" type="radio" name="network" value="TRX">
+            <img class="crypto-logo" src="https://s2.coinmarketcap.com/static/img/coins/64x64/1958.png" alt="TRX Logo"> TRON (TRX)
+        </div>
+
+        <div class="form-check crypto-option">
+            <input class="form-check-input" type="radio" name="network" value="ETH">
+            <img class="crypto-logo" src="https://s2.coinmarketcap.com/static/img/coins/64x64/1027.png" alt="ETH Logo"> Ethereum (ETH)
+        </div>
+
+        <div class="form-check crypto-option">
+            <input class="form-check-input" type="radio" name="network" value="USDT_TRC20">
+            <img class="crypto-logo" src="https://s2.coinmarketcap.com/static/img/coins/64x64/825.png" alt="USDT (TRC-20) Logo"> USDT (TRC-20)
+        </div>
+
+        <div class="form-check crypto-option">
+            <input class="form-check-input" type="radio" name="network" value="USDT_ERC20">
+            <img class="crypto-logo" src="https://s2.coinmarketcap.com/static/img/coins/64x64/825.png" alt="USDT (ERC-20) Logo"> USDT (ERC-20)
+        </div>
+
+        <div class="form-group mt-3">
+            <label for="amount">Monto del depósito en criptomoneda:</label>
+            <input type="number" class="form-control" id="amount" name="amount" step="0.01" required>
+        </div>
+
+        <div class="form-group mt-3">
+            <label for="amountusd">Monto del depósito en usd:</label>
+            <input type="number" class="form-control" id="amountusd" name="amountusd" step="0.01">
+        </div>
+
+        <button type="submit" class="btn btn-primary mt-3">Pagar factura</button>
+    </form>
+    <div id="walletInfo" style="display: none;" class="mt-4">
+        <h2>Billetera de pago generada:</h2>
+        <p>Dirección: <span id="address"></span></p>
+        <p>Monto del depósito: <span id="montoAPagar"></span> <span id="datoCrypto"></span> ($<span id="amountUSD"></span>)</p>
+        <p style="display:none;"><span id="balance"></span></p>
+        <img id="qrCode" src="">
+    </div>
+
+    <script>
+        document.getElementById("walletForm").addEventListener("submit", async function (event) {
+            event.preventDefault();
+            const formData = new FormData(event.target);
+            const selectedNetwork = formData.get("network");
+
+            try {
+                const response = await fetch(`/generar-billetera?network=${selectedNetwork}`);
+                const walletData = await response.json();
+
+                document.getElementById("walletForm").style.display = "none"; // Oculta el formulario
+                document.getElementById("cryptoSelection").style.display = "none"; 
+                document.getElementById("address").textContent = walletData.address;
+                document.getElementById("balance").textContent = walletData.balance;
+                document.getElementById("qrCode").src = walletData.qrCode;
+                document.getElementById("walletInfo").style.display = "block"; // Muestra la respuesta
+                const amount = formData.get("amount");
+                document.getElementById("montoAPagar").textContent = amount;
+                document.getElementById("datoCrypto").textContent = selectedNetwork;
+                var qprice = parseFloat(walletData.qprice);
+                var result = qprice * amount;
+                document.getElementById("amountUSD").textContent = result;
+            } catch (error) {
+                console.error("Error al generar la billetera:", error);
+            }
+        });
+    </script>
+
+    <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.5.1/jquery.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/popper.js/1.16.0/umd/popper.min.js"></script>
+    <script src="https://maxcdn.bootstrapcdn.com/bootstrap/4.5.2/js/bootstrap.min.js"></script>
+</body>
+</html>
