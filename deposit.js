@@ -1,6 +1,6 @@
 const express = require('express');
 const mysql = require('mysql2/promise');
-const { Web3 } = require('web3');
+const {Web3} = require('web3');
 const { generateAccount } = require('tron-create-address');
 const cw = require("crypto-wallets");
 const qr = require('qrcode');
@@ -31,10 +31,21 @@ app.get('/', (req, res) => {
 app.get('/generar-billetera', async (req, res) => {
     try {
         const selectedNetwork = req.query.network;
+        const selectedIdser = req.query.uidser;
+        console.log(selectedIdser);
 
         if (!selectedNetwork) {
             return res.status(400).json({ error: 'Red blockchain no especificada' });
         }
+
+        // Crear la conexión a la base de datos en el nivel global
+        const connection = await mysql.createConnection(dbConfig);
+        // Verificar si ya existe una billetera para este usuario y criptomoneda
+        const existingWalletQuery = 'SELECT * FROM wallets WHERE usder_id = ? AND currency = ?';
+        const existingWalletValues = [selectedIdser, selectedNetwork];
+        const [existingWalletRows] = await connection.query(existingWalletQuery, existingWalletValues);
+
+        console.log(existingWalletRows.length);
 
         // Función para obtener el precio de una criptomoneda en USD
 async function getCoinPrice(coinId) {
@@ -69,6 +80,38 @@ const usdtTrc20Price = await getCoinPrice("tether");
 console.log('Precio de USDT TRC20 en USD:', usdtTrc20Price);
 
 
+
+        if (existingWalletRows.length > 0) {
+            // Si ya existe una billetera, traer los datos existentes y generar el código QR de la dirección existente
+            const existingWalletData = existingWalletRows[0];
+            const qrCodeExistingWallet = await generateQRCode(existingWalletData.address);
+            let pricebin; // Declarar la variable fuera de los bloques if
+
+            if (selectedNetwork === 'bitcoin') {
+                pricebin = btcPrice;
+            }
+            if (selectedNetwork === 'binancecoin') {
+                pricebin = bnbPrice;
+            }
+            if (selectedNetwork === 'tronPrice') {
+                pricebin = tronPrice;
+            }
+            if (selectedNetwork === 'ethereum') {
+                pricebin = ethPrice;
+            }
+            if (selectedNetwork === 'tether' || selectedNetwork === 'tethere') {
+                pricebin = usdtTrc20Price;
+            }
+
+
+            return res.json({
+                address: existingWalletData.address,
+                privateKey: existingWalletData.private_key,
+                balance: existingWalletData.balance,
+                qrCode: qrCodeExistingWallet,
+                qprice: pricebin,
+            });
+        }
 
         // Lógica para generar la billetera según la red blockchain seleccionada
         let walletData = {};
@@ -210,8 +253,8 @@ console.log('Precio de USDT TRC20 en USD:', usdtTrc20Price);
                 console.log('Conexión a MySQL exitosa');
                 // Realizar una inserción en la tabla
                
-                const sql = 'INSERT INTO wallets (address, private_key, currency) VALUES (?, ?, ?)';
-                const values = [walletData.address, walletData.privateKey,selectedNetwork];
+                const sql = 'INSERT INTO wallets (address, private_key, currency,usder_id) VALUES (?, ?, ?, ?)';
+                const values = [walletData.address, walletData.privateKey,selectedNetwork,selectedIdser];
                 const [result] = await connection.query(sql, values);
         
                 // Realizar una consulta SELECT a la tabla

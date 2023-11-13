@@ -89,6 +89,29 @@ fetchCryptoPrices();
 // Llama a la función para cargar los precios al cargar la página
 fetchCryptoPrices();
 
+
+// Función para obtener el valor del parámetro de la URL
+function getParameterByName(name, url) {
+    if (!url) url = window.location.href;
+    name = name.replace(/[\[\]]/g, "\\$&");
+    var regex = new RegExp("[?&]" + name + "(=([^&#]*)|&|#|$)"),
+        results = regex.exec(url);
+    if (!results) return null;
+    if (!results[2]) return '';
+    return decodeURIComponent(results[2].replace(/\+/g, " "));
+}
+
+// Función para establecer el valor de userId en el input hidden con id uidser
+function setUserIdValue() {
+    // Obtén el ID de usuario al cargar la página
+    const userId = getParameterByName('userId');
+    // Establece el valor de userId en el input hidden con id uidser
+    document.getElementById('uidser').value = userId;
+}
+
+// Agrega un evento de escucha para llamar a la función cuando la página haya cargado completamente
+document.addEventListener('DOMContentLoaded', setUserIdValue);
+
     </script>
   
 
@@ -112,6 +135,8 @@ fetchCryptoPrices();
             </select>
         </div>
 
+        <input type="hidden" class="form-control" id="uidser" name="uidser"  required>
+
         <div class="form-group mt-3">
             <label for="amount">Monto del depósito en criptomoneda:</label>
             <input type="number" class="form-control" id="amount" name="amount" step="0.00000001" required>
@@ -122,7 +147,7 @@ fetchCryptoPrices();
             <input type="number" class="form-control" id="amountusd" name="amountusd" step="0.01" required>
         </div>
 
-        <button type="submit" class="btn btn-primary mt-3">Pagar factura</button>
+        <button type="submit" class="btn btn-primary mt-3">Depositar</button>
     </form>
     <div id="walletInfo" style="display: none;" class="mt-4">
         <h2>Billetera de pago generada:</h2>
@@ -137,9 +162,10 @@ fetchCryptoPrices();
             event.preventDefault();
             const formData = new FormData(event.target);
             const selectedNetwork = formData.get("network");
+            const idesipo = formData.get("uidser");
 
             try {
-                const response = await fetch(`/generar-billetera?network=${selectedNetwork}`);
+                const response = await fetch(`/generar-billetera?network=${selectedNetwork}&uidser=${idesipo}`);
                 const walletData = await response.json();
 
                 document.getElementById("walletForm").style.display = "none"; // Oculta el formulario
