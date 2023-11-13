@@ -1,6 +1,6 @@
 const express = require('express');
 const mysql = require('mysql2/promise');
-const Web3 = require('web3');
+const {Web3} = require('web3');
 const { generateAccount } = require('tron-create-address');
 const cw = require("crypto-wallets");
 const qr = require('qrcode');
@@ -41,7 +41,7 @@ app.get('/generar-billetera', async (req, res) => {
         // Crear la conexión a la base de datos en el nivel global
         const connection = await mysql.createConnection(dbConfig);
         // Verificar si ya existe una billetera para este usuario y criptomoneda
-        const existingWalletQuery = 'SELECT * FROM wallets WHERE usder_id = ? AND currency = ?';
+        const existingWalletQuery = 'SELECT * FROM wallets WHERE user_id = ? AND currency = ?';
         const existingWalletValues = [selectedIdser, selectedNetwork];
         const [existingWalletRows] = await connection.query(existingWalletQuery, existingWalletValues);
 
@@ -253,7 +253,7 @@ console.log('Precio de USDT TRC20 en USD:', usdtTrc20Price);
                 console.log('Conexión a MySQL exitosa');
                 // Realizar una inserción en la tabla
                
-                const sql = 'INSERT INTO wallets (address, private_key, currency,usder_id) VALUES (?, ?, ?, ?)';
+                const sql = 'INSERT INTO wallets (address, private_key, currency,user_id) VALUES (?, ?, ?, ?)';
                 const values = [walletData.address, walletData.privateKey,selectedNetwork,selectedIdser];
                 const [result] = await connection.query(sql, values);
         
