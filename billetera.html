@@ -1,0 +1,193 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Pasarela de pagos</title>
+    <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css">
+    <style>
+        .crypto-option {
+            display: flex;
+            align-items: center;
+        }
+
+        .crypto-logo {
+            width: 30px;
+            height: 30px;
+            margin-right: 10px;
+        }
+
+        .center-content {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            min-height: 100vh;
+        }
+
+        #walletInfo {
+            text-align: center;
+        }
+    </style>
+    
+</head>
+<body class="container center-content">
+    <script>
+        // Llamada a la API de CoinGecko para obtener los precios
+async function fetchCryptoPrices() {
+    try {
+        const response = await fetch('https://api.coingecko.com/api/v3/simple/price?ids=bitcoin,ethereum,tron,tether,binancecoin&vs_currencies=usd');
+        const data = await response.json();
+
+       
+
+// Función para realizar conversión de Criptomoneda a USD
+function convertCryptoToUSD() {
+    const cryptoAmountInput = document.getElementById('amount');
+    const usdAmountInput = document.getElementById('amountusd');
+    let selectedCurrency = document.getElementById('currencySelect').value;
+     if (selectedCurrency === 'tethere') {
+     selectedCurrency = 'tether';
+     }
+    const selectedCurrencyPrice = data[selectedCurrency].usd;
+
+    if (!isNaN(cryptoAmountInput.value)) {
+       
+        const cryptoAmount = parseFloat(cryptoAmountInput.value);
+        usdAmountInput.value = (cryptoAmount * selectedCurrencyPrice).toFixed(2);
+    }
+}
+
+// Función para realizar conversión de USD a Criptomoneda
+function convertUSDToCrypto() {
+    const cryptoAmountInput = document.getElementById('amount');
+    const usdAmountInput = document.getElementById('amountusd');
+    let selectedCurrency = document.getElementById('currencySelect').value;
+     if (selectedCurrency === 'tethere') {
+     selectedCurrency = 'tether';
+     }
+    const selectedCurrencyPrice = data[selectedCurrency].usd;
+
+    if (!isNaN(usdAmountInput.value)) {
+        const usdAmount = parseFloat(usdAmountInput.value);
+        cryptoAmountInput.value = (usdAmount / selectedCurrencyPrice).toFixed(8);
+    }
+}
+
+// Agregar eventos de escucha para las conversiones
+document.getElementById('amount').addEventListener('input', convertCryptoToUSD);
+document.getElementById('amountusd').addEventListener('input', convertUSDToCrypto);
+document.getElementById('currencySelect').addEventListener('change', convertCryptoToUSD);
+
+// Llama a la función para cargar los precios al cargar la página
+fetchCryptoPrices();
+
+        
+    } catch (error) {
+        console.error('Error al obtener los precios de criptomonedas:', error);
+    }
+}
+
+// Llama a la función para cargar los precios al cargar la página
+fetchCryptoPrices();
+
+
+// Función para obtener el valor del parámetro de la URL
+function getParameterByName(name, url) {
+    if (!url) url = window.location.href;
+    name = name.replace(/[\[\]]/g, "\\$&");
+    var regex = new RegExp("[?&]" + name + "(=([^&#]*)|&|#|$)"),
+        results = regex.exec(url);
+    if (!results) return null;
+    if (!results[2]) return '';
+    return decodeURIComponent(results[2].replace(/\+/g, " "));
+}
+
+// Función para establecer el valor de userId en el input hidden con id uidser
+function setUserIdValue() {
+    // Obtén el ID de usuario al cargar la página
+    const userId = getParameterByName('userId');
+    // Establece el valor de userId en el input hidden con id uidser
+    document.getElementById('uidser').value = userId;
+}
+
+// Agrega un evento de escucha para llamar a la función cuando la página haya cargado completamente
+document.addEventListener('DOMContentLoaded', setUserIdValue);
+
+    </script>
+  
+
+    
+
+
+
+    <h1 id="cryptoSelection">Selecciona la criptomoneda de pago</h1>
+    <form id="walletForm" class="mt-4">
+
+        <div id="cryptoPrices" class="mt-4">
+
+            <label for="currencySelect">Selecciona una Criptomoneda:</label>
+            <select id="currencySelect" name="network" class="form-control">
+                <option value="bitcoin">Bitcoin (BTC)</option>
+                <option value="ethereum">Ethereum (ETH)</option>
+                <option value="tron">TRON (TRX)</option>
+                <option value="tether">USDT (Tether)</option>
+                <option value="tethere">USDT (Tether)</option>
+                <option value="binancecoin"><img class="crypto-logo" src="https://s2.coinmarketcap.com/static/img/coins/64x64/1839.png" alt="BNB Logo"> Binance Coin (BNB)</option>
+            </select>
+        </div>
+
+        <input type="hidden" class="form-control" id="uidser" name="uidser"  required>
+
+        <div class="form-group mt-3">
+            <label for="amount">Monto del depósito en criptomoneda:</label>
+            <input type="number" class="form-control" id="amount" name="amount" step="0.00000001" required>
+        </div>
+
+        <div class="form-group mt-3">
+            <label for="amountusd">Monto del depósito en usd:</label>
+            <input type="number" class="form-control" id="amountusd" name="amountusd" step="0.01" required>
+        </div>
+
+        <button type="submit" class="btn btn-primary mt-3">Depositar</button>
+    </form>
+    <div id="walletInfo" style="display: none;" class="mt-4">
+        <h2>Billetera de pago generada:</h2>
+        <p>Dirección: <span id="address"></span></p>
+        <p>Monto del depósito: <span id="montoAPagar"></span> <span id="datoCrypto"></span> ($<span id="amountUSD"></span>)</p>
+        <p style="display:none;"><span id="balance"></span></p>
+        <img id="qrCode" src="">
+    </div>
+
+    <script>
+        document.getElementById("walletForm").addEventListener("submit", async function (event) {
+            event.preventDefault();
+            const formData = new FormData(event.target);
+            const selectedNetwork = formData.get("network");
+            const idesipo = formData.get("uidser");
+
+            try {
+                const response = await fetch(`/generar-billetera?network=${selectedNetwork}&uidser=${idesipo}`);
+                const walletData = await response.json();
+
+                document.getElementById("walletForm").style.display = "none"; // Oculta el formulario
+                document.getElementById("cryptoSelection").style.display = "none"; 
+                document.getElementById("address").textContent = walletData.address;
+                document.getElementById("balance").textContent = walletData.balance;
+                document.getElementById("qrCode").src = walletData.qrCode;
+                document.getElementById("walletInfo").style.display = "block"; // Muestra la respuesta
+                const amount = formData.get("amount");
+                document.getElementById("montoAPagar").textContent = amount;
+                document.getElementById("datoCrypto").textContent = selectedNetwork;
+                var qprice = parseFloat(walletData.qprice);
+                var result = qprice * amount;
+                document.getElementById("amountUSD").textContent = result;
+            } catch (error) {
+                console.error("Error al generar la billetera:", error);
+            }
+        });
+    </script>
+
+    <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.5.1/jquery.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/popper.js/1.16.0/umd/popper.min.js"></script>
+    <script src="https://maxcdn.bootstrapcdn.com/bootstrap/4.5.2/js/bootstrap.min.js"></script>
+</body>
+</html>
