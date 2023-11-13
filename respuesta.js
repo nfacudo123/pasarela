@@ -11,9 +11,9 @@ const port = 3000;
 // Conexión a la base de datos MySQL
 const dbConfig = {
     host: 'localhost',
-    user: 'root',
-    password: 'Aristo3030..',
-    database: 'extreme',
+    user: 'inwall_bdx',
+    password: '?(ia3h]iKf;I',
+    database: 'inwall_bdx',
 };
 
 let connection;
