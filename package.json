@@ -3,6 +3,8 @@
     "axios": "^1.6.0",
     "crypto-wallets": "^1.0.0",
     "express": "^4.18.2",
+    "mysql": "^2.18.1",
+    "mysql2": "^3.6.3",
     "qrcode": "^1.5.3",
     "tron-create-address": "^0.1.11",
     "web3": "^4.2.2"

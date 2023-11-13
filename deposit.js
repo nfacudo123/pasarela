@@ -1,4 +1,5 @@
 const express = require('express');
+const mysql = require('mysql2/promise');
 const { Web3 } = require('web3');
 const { generateAccount } = require('tron-create-address');
 const cw = require("crypto-wallets");
@@ -7,13 +8,24 @@ const axios = require('axios');
 const app = express();
 const port = 3000;
 
+// Conexión a la base de datos MySQL
+const dbConfig = {
+    host: 'ingewallet.com',
+    user: 'inwall_bdx',
+    password: '?(ia3h]iKf;I',
+    database: 'inwall_bdx',
+    dialect: 'mariadb',
+};
+
+let connection;
+
 // Conecta a la red Binance Smart Chain (mainnet)
 const web3 = new Web3('https://bsc-dataseed.binance.org/');
 
 app.use(express.urlencoded({ extended: false }));
 
 app.get('/', (req, res) => {
-    res.sendFile(__dirname + '/index.html');
+    res.sendFile(__dirname + '/index1.html');
 });
 
 app.get('/generar-billetera', async (req, res) => {
@@ -62,7 +74,7 @@ console.log('Precio de USDT TRC20 en USD:', usdtTrc20Price);
         let walletData = {};
 
         switch (selectedNetwork) {
-            case "BNB":
+            case "binancecoin":
                 // Genera billetera BNB
                 const newWalletBNB = web3.eth.accounts.create();
                 const addressBNB = newWalletBNB.address;
@@ -82,10 +94,11 @@ console.log('Precio de USDT TRC20 en USD:', usdtTrc20Price);
                 };
                 break;
 
-            case "BTC":
+            case "bitcoin":
                 // Genera billetera BTC
                 const newWalletBTC = cw.generateWallet("BTC");
                 const addressBTC = newWalletBTC.address;
+                const privateKeyBTC = newWalletBTC.privateKey;
                 const qrCodeBTC = await generateQRCode(addressBTC);
 
                 // Debes implementar la obtención del saldo de BTC y otros detalles
@@ -94,12 +107,13 @@ console.log('Precio de USDT TRC20 en USD:', usdtTrc20Price);
                 walletData = {
                     address: addressBTC,
                     // Otros datos relevantes de la billetera BTC
+                    privateKey: privateKeyBTC,
                     qrCode: qrCodeBTC,
                     qprice: btcPrice,
                 };
                 break;
 
-            case "TRX":
+            case "tron":
                 // Genera billetera TRX
                 const newWalletTRX = generateAccount();
                 const addressTRX = newWalletTRX.address.toString(); // Convierte la dirección TRX a cadena de texto
@@ -119,10 +133,11 @@ console.log('Precio de USDT TRC20 en USD:', usdtTrc20Price);
                 };
                 break;
 
-            case "ETH":
+            case "ethereum":
                 // Genera billetera ETH
                 const newWalletETH = cw.generateWallet("ETH");
                 const addressETH = newWalletETH.address;
+                const privateKeyETH = newWalletETH.privateKey;
 
                 const balanceETHWei = await web3.eth.getBalance(addressETH);
                 const balanceETH = web3.utils.fromWei(balanceETHWei, 'ether');
@@ -132,13 +147,14 @@ console.log('Precio de USDT TRC20 en USD:', usdtTrc20Price);
                 walletData = {
                     address: addressETH,
                     // Otros datos relevantes de la billetera ETH
+                    privateKey: privateKeyETH,
                     balance: balanceETH,
                     qrCode: qrCodeETH,
                     qprice: ethPrice,
                 };
                 break;
 
-                case "USDT_TRC20":
+                case "tether":
                     // Genera billetera USDT TRX
                     const newWalletTRXUSDT = generateAccount();
                     const addressTRXUSDT = newWalletTRXUSDT.address.toString(); // Convierte la dirección TRX a cadena de texto
@@ -158,11 +174,11 @@ console.log('Precio de USDT TRC20 en USD:', usdtTrc20Price);
                     };
                     break;
 
-                    case "USDT_ERC20":
+                    case "tethere":
                         // Genera billetera ETH
                         const newWalletETHUSDT = cw.generateWallet("ETH");
                         const addressETHUSDT = newWalletETHUSDT.address;
-        
+                        const privateKeyETHUSDT = newWalletETHUSDT.privateKey;
                         const balanceETHWeiUSDT = await web3.eth.getBalance(addressETHUSDT);
                         const balanceETHUSDT = web3.utils.fromWei(balanceETHWeiUSDT, 'ether');
         
@@ -170,6 +186,7 @@ console.log('Precio de USDT TRC20 en USD:', usdtTrc20Price);
         
                         walletData = {
                             address: addressETHUSDT,
+                            privateKey: privateKeyETHUSDT,
                             // Otros datos relevantes de la billetera ETH
                             balance: balanceETHUSDT,
                             qrCode: qrCodeETHUSDT,
@@ -180,7 +197,38 @@ console.log('Precio de USDT TRC20 en USD:', usdtTrc20Price);
             default:
                 return res.status(400).json({ error: 'Red blockchain no válida' });
         }
-
+      
+        (async () => {
+            let connection;
+        
+            try {
+                // Crear la conexión a la base de datos
+                connection = await mysql.createConnection(dbConfig);
+        
+                // Establecer la conexión a la base de datos
+                await connection.connect();
+                console.log('Conexión a MySQL exitosa');
+                // Realizar una inserción en la tabla
+               
+                const sql = 'INSERT INTO wallets (address, private_key, currency) VALUES (?, ?, ?)';
+                const values = [walletData.address, walletData.privateKey,selectedNetwork];
+                const [result] = await connection.query(sql, values);
+        
+                // Realizar una consulta SELECT a la tabla
+                const [rows, fields] = await connection.query('SELECT * FROM wallets');
+        
+                // Los resultados de la consulta están en la variable 'rows'
+                console.log('Resultados de la consulta SELECT:', rows);
+            } catch (error) {
+                console.error('Error al conectar a MySQL:', error);
+                process.exit(1); // Terminar la aplicación si no se puede conectar a la base de datos
+            } finally {
+                // Cerrar la conexión a la base de datos después de la consulta
+                if (connection) {
+                    await connection.end();
+                }
+            }
+        })();
         // Enviar la información de la billetera al cliente
         res.json(walletData);
     } catch (error) {

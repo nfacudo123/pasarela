@@ -30,46 +30,96 @@
     
 </head>
 <body class="container center-content">
+    <script>
+        // Llamada a la API de CoinGecko para obtener los precios
+async function fetchCryptoPrices() {
+    try {
+        const response = await fetch('https://api.coingecko.com/api/v3/simple/price?ids=bitcoin,ethereum,tron,tether,binancecoin&vs_currencies=usd');
+        const data = await response.json();
+
+       
+
+// Función para realizar conversión de Criptomoneda a USD
+function convertCryptoToUSD() {
+    const cryptoAmountInput = document.getElementById('amount');
+    const usdAmountInput = document.getElementById('amountusd');
+    let selectedCurrency = document.getElementById('currencySelect').value;
+     if (selectedCurrency === 'tethere') {
+     selectedCurrency = 'tether';
+     }
+    const selectedCurrencyPrice = data[selectedCurrency].usd;
+
+    if (!isNaN(cryptoAmountInput.value)) {
+       
+        const cryptoAmount = parseFloat(cryptoAmountInput.value);
+        usdAmountInput.value = (cryptoAmount * selectedCurrencyPrice).toFixed(2);
+    }
+}
+
+// Función para realizar conversión de USD a Criptomoneda
+function convertUSDToCrypto() {
+    const cryptoAmountInput = document.getElementById('amount');
+    const usdAmountInput = document.getElementById('amountusd');
+    let selectedCurrency = document.getElementById('currencySelect').value;
+     if (selectedCurrency === 'tethere') {
+     selectedCurrency = 'tether';
+     }
+    const selectedCurrencyPrice = data[selectedCurrency].usd;
+
+    if (!isNaN(usdAmountInput.value)) {
+        const usdAmount = parseFloat(usdAmountInput.value);
+        cryptoAmountInput.value = (usdAmount / selectedCurrencyPrice).toFixed(8);
+    }
+}
+
+// Agregar eventos de escucha para las conversiones
+document.getElementById('amount').addEventListener('input', convertCryptoToUSD);
+document.getElementById('amountusd').addEventListener('input', convertUSDToCrypto);
+document.getElementById('currencySelect').addEventListener('change', convertCryptoToUSD);
+
+// Llama a la función para cargar los precios al cargar la página
+fetchCryptoPrices();
+
+        
+    } catch (error) {
+        console.error('Error al obtener los precios de criptomonedas:', error);
+    }
+}
+
+// Llama a la función para cargar los precios al cargar la página
+fetchCryptoPrices();
+
+    </script>
+  
+
+    
+
+
+
     <h1 id="cryptoSelection">Selecciona la criptomoneda de pago</h1>
     <form id="walletForm" class="mt-4">
-        <div class="form-check crypto-option">
-            <input class="form-check-input" type="radio" name="network" value="BNB" required>
-            <img class="crypto-logo" src="https://s2.coinmarketcap.com/static/img/coins/64x64/1839.png" alt="BNB Logo"> Binance Smart Chain (BNB)
-        </div>
 
-        <div class="form-check crypto-option">
-            <input class="form-check-input" type="radio" name="network" value="BTC">
-            <img class="crypto-logo" src="https://s2.coinmarketcap.com/static/img/coins/64x64/1.png" alt "BTC Logo"> Bitcoin (BTC)
-        </div>
+        <div id="cryptoPrices" class="mt-4">
 
-        <div class="form-check crypto-option">
-            <input class="form-check-input" type="radio" name="network" value="TRX">
-            <img class="crypto-logo" src="https://s2.coinmarketcap.com/static/img/coins/64x64/1958.png" alt="TRX Logo"> TRON (TRX)
-        </div>
-
-        <div class="form-check crypto-option">
-            <input class="form-check-input" type="radio" name="network" value="ETH">
-            <img class="crypto-logo" src="https://s2.coinmarketcap.com/static/img/coins/64x64/1027.png" alt="ETH Logo"> Ethereum (ETH)
-        </div>
-
-        <div class="form-check crypto-option">
-            <input class="form-check-input" type="radio" name="network" value="USDT_TRC20">
-            <img class="crypto-logo" src="https://s2.coinmarketcap.com/static/img/coins/64x64/825.png" alt="USDT (TRC-20) Logo"> USDT (TRC-20)
-        </div>
-
-        <div class="form-check crypto-option">
-            <input class="form-check-input" type="radio" name="network" value="USDT_ERC20">
-            <img class="crypto-logo" src="https://s2.coinmarketcap.com/static/img/coins/64x64/825.png" alt="USDT (ERC-20) Logo"> USDT (ERC-20)
+            <label for="currencySelect">Selecciona una Criptomoneda:</label>
+            <select id="currencySelect" name="network" class="form-control">
+                <option value="bitcoin">Bitcoin (BTC)</option>
+                <option value="ethereum">Ethereum (ETH)</option>
+                <option value="tron">TRON (TRX)</option>
+                <option value="tether">USDT (Tether)</option>
+                <option value="tethere">USDT (Tether)</option>
+                <option value="binancecoin"><img class="crypto-logo" src="https://s2.coinmarketcap.com/static/img/coins/64x64/1839.png" alt="BNB Logo"> Binance Coin (BNB)</option>
+            </select>
         </div>
 
         <div class="form-group mt-3">
             <label for="amount">Monto del depósito en criptomoneda:</label>
-            <input type="number" class="form-control" id="amount" name="amount" step="0.01" required>
+            <input type="number" class="form-control" id="amount" name="amount" step="0.00000001" required>
         </div>
 
         <div class="form-group mt-3">
             <label for="amountusd">Monto del depósito en usd:</label>
-            <input type="number" class="form-control" id="amountusd" name="amountusd" step="0.01">
+            <input type="number" class="form-control" id="amountusd" name="amountusd" step="0.01" required>
         </div>
 
         <button type="submit" class="btn btn-primary mt-3">Pagar factura</button>

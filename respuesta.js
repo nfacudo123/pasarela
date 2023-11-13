@@ -10,10 +10,11 @@ const port = 3000;
 
 // Conexión a la base de datos MySQL
 const dbConfig = {
-    host: 'localhost',
+    host: 'ingewallet.com',
     user: 'inwall_bdx',
     password: '?(ia3h]iKf;I',
     database: 'inwall_bdx',
+    dialect: 'mariadb',
 };
 
 let connection;
