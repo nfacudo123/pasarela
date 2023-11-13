@@ -253,7 +253,7 @@ console.log('Precio de USDT TRC20 en USD:', usdtTrc20Price);
                 console.log('Conexión a MySQL exitosa');
                 // Realizar una inserción en la tabla
                
-                const sql = 'INSERT INTO wallets (address, private_key, currency,user_id) VALUES (?, ?, ?, ?)';
+                const sql = 'INSERT INTO wallets (address, private_key, currency,usder_id) VALUES (?, ?, ?, ?)';
                 const values = [walletData.address, walletData.privateKey,selectedNetwork,selectedIdser];
                 const [result] = await connection.query(sql, values);
         
