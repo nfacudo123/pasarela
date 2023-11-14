@@ -1,5 +1,4 @@
 const express = require('express');
-const cors = require('cors');
 const mysql = require('mysql2/promise');
 const {Web3} = require('web3');
 const { generateAccount } = require('tron-create-address');
@@ -8,9 +7,6 @@ const qr = require('qrcode');
 const axios = require('axios');
 const app = express();
 const port = 3000;
-
-
-app.use(cors({origin:[]}))
 
 // Conexión a la base de datos MySQL
 const dbConfig = {
